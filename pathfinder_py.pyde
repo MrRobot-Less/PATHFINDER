@@ -1,6 +1,5 @@
 #AUTOR = GUSTAVO ANDRÉ
 
-
 class Grid:
     def __init__(self, width,height, scl):
         self.scl = scl
@@ -13,27 +12,31 @@ class Grid:
                 
                 self.grid[x].append( [int(x*scl), int(y*scl)])
                 
-    def update(self):
+    def update(self, click):
         if(click):
             x = int(mouseX/self.scl)
             y = int(mouseY/self.scl)
-            self.grid[x][y] = [None, None]
-            self.personalize = True
+            if(x < len(self.grid) and y < len(self.grid[0])):
+                self.grid[x][y] = [None, None]
+            
                     
     def show(self):
         for x in range(len(self.grid)):
             for y in range(len(self.grid[0])):
+                noStroke()
                 if(None in self.grid[x][y]):
+                    xx = int(x * self.scl)
+                    yy = int(y * self.scl)
+                    # fill(23,8,23)
+                    # rect(xx,yy,self.scl,self.scl)
                     fill(0)
-                    xx = int(x * self.scl)+self.scl/2
-                    yy = int(y * self.scl)+self.scl/2
-                    ellipse(xx,yy,self.scl/2,self.scl/2)
+                    ellipse(xx+self.scl/2,yy+self.scl/2,self.scl/2,self.scl/2)
                     
                     
 class Knot:
     def __init__(self, x,y, grid,previous = None):
         self.x = x
-        self.y = y
+        self.y = y 
         self.previous = previous
         self.Grid = grid
         self.grid = grid.grid
@@ -58,14 +61,17 @@ class Knot:
                 
         return paths
     
-    def show(self):
+    def showRect(self):
         noStroke()        
         rect(self.grid[self.x][self.y][0], self.grid[self.x][self.y][1], self.scl, self.scl)
-
-
+        
+    def showCircle(self):
+        stroke(0)    
+        strokeWeight(0.5)    
+        ellipse(self.grid[self.x][self.y][0]+self.scl/2, self.grid[self.x][self.y][1]+self.scl/2, self.scl/2, self.scl/2)
 
 def heuristic(a, b):
-    return int(dist(a.x, a.y, b.x, b.y))
+    return dist(a.x, a.y, b.x, b.y)
                                              
 def calc_path(knot, end):
     path = []    
@@ -80,14 +86,11 @@ def calc_path(knot, end):
         path.append(current)
 
     value += len(path)
+    return (path, value)
     
-    if len(path) > 1:
-        return (path, value)
-    else:
-        return ([knot], 1000)
 
 def calc_better_path(knots, end):
-    smaller = 100000
+    smaller = 10000
     selected = None
     for knot in knots: 
         path, value = calc_path(knot, end)
@@ -97,6 +100,8 @@ def calc_better_path(knots, end):
 
     return selected if selected else []
 
+    
+    
 def itemInArray(arr, elm):
     for item in arr:
         if(elm.x == item.x and elm.y == item.y):
@@ -105,11 +110,11 @@ def itemInArray(arr, elm):
     return (-1, False)
                                                                                                                                                                                             
 #### class's
-scl = 400/25                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
+scl = 400/20                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         
 grid = Grid(400,400,scl)
 
 #### variable
-
+origin = Knot(0,0,grid)
 end = Knot(len(grid.grid)-1, len(grid.grid[-1])-1, grid)
 
 #### array
@@ -117,13 +122,12 @@ better_path = []
 list_open = []
 list_close = []
 
-#### event pressed ####
+#### variables event pressed ####
 click = False
 runner = False
-
+showLists = False
 
 #### commands
-origin = Knot(0,0,grid)
 list_open.append(Knot(0,0,grid))
 
 def setup():
@@ -141,17 +145,11 @@ def grid_random():
     
 def draw():
     global frame, better_path, list_open, runner
-    background(255,20)
-    ##print(len(list_open))
-
+    background(255,50)
     if(not runner):
-        #if(not grid.personalize): grid_random()
-        # grid.update()
-        grid_random()
-        runner = True
-        
+        grid_random() # random map
+        runner = True #  random map    
     else:
-        
         _, endInClose = itemInArray(list_open, end)
         if(not endInClose):
             knots = calc_better_path(list_open, end)
@@ -160,57 +158,57 @@ def draw():
                 if(condiction):
                     list_open.pop(id)        
             if(len(knots) > 0):
+                better_path = knots
                 selected = knots[0]
                 list_close.append(selected)
                 paths = selected.addKnot(list_open, list_close)
                 
-                if(len(paths) > 0):
-                    for k in paths:
-                        list_open.append(k)
+                for k in paths:
+                    list_open.append(k)
             else:
                 print("no solution")
-                noLoop()
-            
-                
-
+                #noLoop()
         else:
             print("DONE!")
             better_path = calc_better_path(list_open, end)
+            #noLoop()
+    if(showLists):
+                        
+        for k in list_open:
+    
+            fill(204,42,63)
+            k.showRect()
             
-    for k in list_open:
-
-        fill(0,255,0)
-        k.show()
-        
-    for k in list_close:
-
-        fill(0,0,255)
-        k.show()
-    fill(255,244,0)
-    end.show()
+        for k in list_close:
+    
+            fill(124,0,49)
+            k.showRect()
+            
+    fill(255,0,0)
+    origin.showCircle()
+    
+    fill(0,255,0)
+    end.showCircle()
+    
     grid.show()    
     
-    if(len(better_path) > 0):
-        noFill();
-        stroke(255, 0, 200);
-        strokeWeight(scl / 2);
-        beginShape();
+    noFill()
+    stroke(255,88,59)
+    strokeWeight(scl / 3);
+    beginShape();
+    for k in better_path:
+        vertex(k.x * scl + scl / 2, k.y * scl + scl / 2);
+    endShape()
         
-        for k in better_path:
-            vertex(k.x * scl + scl / 2, k.y * scl + scl / 2);
-            
-        endShape()
-        noLoop()
-    
-
     
     
-def mouseClicked():
+def mousePressed():
     global click
     click = not click
-
-    
+        
 def keyTyped():
-    global runner
+    global runner, showLists
     if(key == ' '):
-        runner = True    
+        runner = True
+    elif(key == 'q'):
+        showLists = not showLists    
