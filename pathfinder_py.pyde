@@ -23,27 +23,21 @@ class Grid:
     def show(self):
         for x in range(len(self.grid)):
             for y in range(len(self.grid[0])):
-                # noStroke()
                 if(None in self.grid[x][y]):
                     fill(0)
                     xx = int(x * self.scl)+self.scl/2
                     yy = int(y * self.scl)+self.scl/2
-                    #ellipse((x*self.scl)+x*self.scl/2, (y*self.scl)+y*self.scl/2, self.scl/2,self.scl/2)
                     ellipse(xx,yy,self.scl/2,self.scl/2)
                     
                     
 class Knot:
-    def __init__(self, x,y, grid,previous = None, g=None, h=None, f=None):
+    def __init__(self, x,y, grid,previous = None):
         self.x = x
         self.y = y
         self.previous = previous
         self.Grid = grid
         self.grid = grid.grid
         self.scl = grid.scl
-        self.children = []
-        self.g = g
-        self.f = f
-        self.h = h
         
     def addKnot(self, list_open, list_close):
         paths = []
@@ -89,10 +83,7 @@ def calc_path(knot, end):
     
     if len(path) > 1:
         return (path, value)
-       
-        noLoop() 
     else:
-        
         return ([knot], 1000)
 
 def calc_better_path(knots, end):
@@ -104,12 +95,8 @@ def calc_better_path(knots, end):
             smaller = value
             selected = path          
 
-        #print(value,(knot.x, knot.y))
-
     return selected if selected else []
 
-    
-    
 def itemInArray(arr, elm):
     for item in arr:
         if(elm.x == item.x and elm.y == item.y):
@@ -168,13 +155,11 @@ def draw():
         _, endInClose = itemInArray(list_open, end)
         if(not endInClose):
             knots = calc_better_path(list_open, end)
-            #better_path = knots
             for item in knots:
                 id, condiction = itemInArray(list_open, item)
                 if(condiction):
                     list_open.pop(id)        
             if(len(knots) > 0):
-                #better_path = knots
                 selected = knots[0]
                 list_close.append(selected)
                 paths = selected.addKnot(list_open, list_close)
